@@ -2323,7 +2323,7 @@ select:focus-visible {
                 <input type="number" id="monthly-income" class="onboarding-input" placeholder="0" min="0" step="0.01">
                 <div class="currency-selector">
                     <button class="currency-btn active" data-currency="USD" data-rate="1" data-symbol="$" onclick="selectCurrency('USD')">$</button>
-                    <button class="currency-btn" data-currency="TJS" data-rate="10.7" data-symbol="SM" onclick="selectCurrency('TJS')">SM</button>
+                    <button class="currency-btn" data-currency="TJS" data-rate="10.7" data-symbol="SM" onclick="selectCurrency('TJS')">TJS</button>
                     <button class="currency-btn" data-currency="RUB" data-rate="92" data-symbol="₽" onclick="selectCurrency('RUB')">₽</button>
                 </div>
                 <button class="onboarding-btn" onclick="nextOnboardingStep()">Продолжить</button>
@@ -3141,7 +3141,7 @@ select:focus-visible {
             <div class="modal-body">
                 <div class="currency-options">
                     <button class="currency-option" onclick="changeCurrency('USD')">USD ($)</button>
-                    <button class="currency-option" onclick="changeCurrency('TJS')">TJS (SM)</button>
+                    <button class="currency-option" onclick="changeCurrency('TJS')">TJS (TJS)</button>
                     <button class="currency-option" onclick="changeCurrency('RUB')">RUB (₽)</button>
                 </div>
             </div>
@@ -3186,7 +3186,15 @@ select:focus-visible {
         </div>
     </div>
 <script>
+
    // Mustafoshoh Programer // State Management
+   // 🔧 Глобальные переменные
+let currentOnboardingStep = 1; // ← ДОБАВИТЬ ЭТО!
+let voiceManager = null;
+let lineChartInstance = null;
+let pieChartInstance = null;
+   // 🔧 Глобальные переменные
+
 let state = {
     user: {
         monthlyIncome: 0,
@@ -3254,7 +3262,7 @@ const rates = {
 
 const currencySymbols = {
     USD: '$',
-    TJS: 'SM',
+    TJS: 'TJS',
     RUB: '₽'
 };
 
@@ -3340,17 +3348,35 @@ const translations = {
     }
 };
 
+
 // Mustafoshoh Programer // Chart instances
-let lineChartInstance = null;
-let pieChartInstance = null;
+
 
 // Mustafoshoh Programer // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Загрузка приложения...');
+    
+    // Загрузить данные
     loadData();
+    
+    // Проверить Chart.js
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js не загружен! Проверьте подключение скрипта');
+    }
+    
+    // Инициализировать приложение
     initializeApp();
+    
+    // Setup event listeners
     setupEventListeners();
+    
+    // Проверить уведомления
     checkNotifications();
+    
+    // Обработать регулярные платежи
     processRecurringPayments();
+    
+    console.log('✅ Приложение готово');
 });
 // Mustafoshoh Programer // Load Data
 function loadData() {
@@ -3384,11 +3410,8 @@ function initializeApp() {
     if (state.isFirstLaunch) {
         showOnboarding();
     } else {
-      // ✨ ДОБАВИТЬ СЮДА:
-        
-        // Если нет транзакций - добавить тестовые
-        if (state.transactions.length === 0) {
-            addTestData();
+      
+            
         }
         
         const onboardingEl = document.getElementById('onboarding');
@@ -3396,7 +3419,6 @@ function initializeApp() {
         
         if (onboardingEl) {
             onboardingEl.style.display = 'none';
-            onboardingEl.classList.remove('active');
         }
         
         if (appEl) {
@@ -3408,12 +3430,14 @@ function initializeApp() {
         updateUI();
         renderAllScreens();
         
+        // Инициализация с задержкой
         setTimeout(() => {
-            initializeCharts();
+            if (typeof Chart !== 'undefined') {
+                initializeCharts();
+            }
             initializeVoiceRecognition();
-        }, 100);
+        }, 200);
     }
-}
 
 // Функция для добавления тестовых данных
 
@@ -3429,6 +3453,14 @@ function showOnboarding() {
 }
 
 function addTestData() {
+    // ❌ ТЕСТОВЫЕ ДАННЫЕ ОТКЛЮЧЕНЫ
+    // Если нужно добавить данные - раскомментируйте код ниже
+    
+    console.log('ℹ️ Тестовые данные отключены');
+    return;
+    
+    /* ЗАКОММЕНТИРОВАНО - раскомментируйте если нужны тестовые данные
+    
     console.log('📊 Добавление тестовых данных...');
     
     const now = Date.now();
@@ -3438,96 +3470,23 @@ function addTestData() {
     const testTransactions = [];
     let idCounter = now;
     
-    // ==========================================
-    // ДАННЫЕ ЗА ПОСЛЕДНИЕ 30 ДНЕЙ (для Месяца)
-    // ==========================================
-    
-    for (let day = 0; day < 30; day++) {
-        const dayTimestamp = now - (day * oneDay);
-        const numTransactions = Math.floor(Math.random() * 3) + 2; // 2-4 транзакции в день
-        
-        for (let i = 0; i < numTransactions; i++) {
-            const categories = ['food', 'transport', 'restaurant', 'entertainment', 'health', 'clothes', 'bills'];
-            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-            const randomAmount = Math.floor(Math.random() * 150) + 20; // $20-$170
-            const randomHour = Math.floor(Math.random() * 14) + 8; // 8:00 - 22:00
-            
-            testTransactions.push({
-                id: idCounter++,
-                type: 'expense',
-                amount: randomAmount,
-                currency: 'USD',
-                category: randomCategory,
-                description: `Покупка ${randomCategory}`,
-                timestamp: dayTimestamp - (randomHour * oneHour)
-            });
-        }
-        
-        // Добавить доход каждые 7 дней
-        if (day % 7 === 0) {
-            testTransactions.push({
-                id: idCounter++,
-                type: 'income',
-                amount: Math.floor(Math.random() * 500) + 500, // $500-$1000
-                currency: 'USD',
-                category: 'salary',
-                description: 'Зарплата',
-                timestamp: dayTimestamp
-            });
-        }
-    }
-    
-    // ==========================================
-    // ДАННЫЕ ЗА ПОСЛЕДНИЕ 12 МЕСЯЦЕВ (для Года)
-    // ==========================================
-    
-    for (let month = 1; month < 12; month++) {
-        const monthTimestamp = now - (month * 30 * oneDay);
-        const numTransactions = Math.floor(Math.random() * 20) + 30; // 30-50 транзакций в месяц
-        
-        for (let i = 0; i < numTransactions; i++) {
-            const categories = ['food', 'transport', 'restaurant', 'entertainment', 'health', 'clothes', 'bills', 'other'];
-            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-            const randomAmount = Math.floor(Math.random() * 200) + 10;
-            const randomDay = Math.floor(Math.random() * 30);
-            
-            testTransactions.push({
-                id: idCounter++,
-                type: 'expense',
-                amount: randomAmount,
-                currency: 'USD',
-                category: randomCategory,
-                description: `Покупка ${randomCategory}`,
-                timestamp: monthTimestamp - (randomDay * oneDay)
-            });
-        }
-        
-        // Доход каждый месяц
-        testTransactions.push({
-            id: idCounter++,
-            type: 'income',
-            amount: Math.floor(Math.random() * 1000) + 2000, // $2000-$3000
-            currency: 'USD',
-            category: 'salary',
-            description: 'Месячная зарплата',
-            timestamp: monthTimestamp
-        });
-    }
+    // ... весь остальной код тестовых данных
     
     state.transactions = testTransactions;
     saveData();
     
     console.log('✅ Добавлено ' + testTransactions.length + ' тестовых транзакций');
-    console.log('📅 Охват: последние 12 месяцев');
+    */
 }
+
 /*******  8696572d-3812-4eab-be58-b03f9b651af7  *******/
 function nextOnboardingStep() {
-    const currentStepEl = document.querySelector(`.onboarding-step[data-step="${currentOnboardingStep}"]`);
+    const currentStepEl = document.querySelector(`.onboarding-step.active`);
     
     if (currentOnboardingStep === 2) {
         const income = parseFloat(document.getElementById('monthly-income').value);
         if (!income || income <= 0) {
-            showToast(translations[state.user.language].fillFields, 'error');
+            showToast('Введите корректную сумму дохода', 'error');
             return;
         }
         state.user.monthlyIncome = income;
@@ -3538,7 +3497,9 @@ function nextOnboardingStep() {
     currentOnboardingStep++;
     
     const nextStepEl = document.querySelector(`.onboarding-step[data-step="${currentOnboardingStep}"]`);
-    if (nextStepEl) nextStepEl.classList.add('active');
+    if (nextStepEl) {
+        nextStepEl.classList.add('active');
+    }
 }
 
 function finishOnboarding() {
@@ -3726,8 +3687,10 @@ function updateGreeting() {
 }
 
 function updateBalanceCard() {
+    //const rate = rates[state.user.currency] || 1;
+    //const budget = state.user.monthlyIncome * rate;
+   const budget = state.user.monthlyIncome; // БЕЗ умножения!
     const rate = rates[state.user.currency] || 1;
-    const budget = state.user.monthlyIncome * rate;
     
     const expenses = getFilteredTransactions('expense', 'month');
     const totalExpense = expenses.reduce((sum, t) => {
@@ -3757,7 +3720,6 @@ function updateBalanceCard() {
     
     updateElementText('spent-percent', Math.round(spentPercent) + '%');
 }
-
 function updateQuickStats() {
     const rate = rates[state.user.currency] || 1;
     
@@ -3912,12 +3874,18 @@ function updateAnalyticsCards() {
 }
 
 function renderLineChart() {
-    const canvas = document.getElementById('line-chart');
-    if (!canvas) {
-        console.warn('Line chart canvas not found');
+     if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js не загружен');
+        setTimeout(renderLineChart, 300);
         return;
     }
     
+    const canvas = document.getElementById('line-chart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas line-chart не найден');
+        return;
+    }
+
     const ctx = canvas.getContext('2d');
     if (!ctx) {
         console.error('Cannot get 2D context');
@@ -5324,7 +5292,7 @@ class VoiceManager {
 }
 
 // Создать глобальный экземпляр
-let voiceManager = null;
+
 
 // ==========================================
 // 🚀 ИНИЦИАЛИЗАЦИЯ
@@ -6397,6 +6365,10 @@ function changeCurrency(currency) {
 function editBudget() {
     const currentIncome = state.user.monthlyIncome;
     const currentCurrency = state.user.currency;
+    const rate = rates[currentCurrency] || 1;
+    
+    // ✅ ИСПРАВЛЕНИЕ: показываем доход в ОРИГИНАЛЬНОЙ валюте
+    const displayIncome = currentIncome; // БЕЗ умножения на rate!
     const symbol = currencySymbols[currentCurrency];
     
     const modal = document.createElement('div');
@@ -6413,21 +6385,21 @@ function editBudget() {
                 <div class="form-group">
                     <label>Ежемесячный доход</label>
                     <input type="number" id="edit-income-input" class="amount-input" 
-                           value="${currentIncome}" step="0.01" min="0" 
+                           value="${displayIncome}" step="0.01" min="0" 
                            placeholder="0.00">
                 </div>
                 <div class="currency-selector-edit">
                     <button class="currency-edit-btn ${currentCurrency === 'USD' ? 'active' : ''}" 
                             onclick="selectEditCurrency('USD')">$ USD</button>
                     <button class="currency-edit-btn ${currentCurrency === 'TJS' ? 'active' : ''}" 
-                            onclick="selectEditCurrency('TJS')">SM TJS</button>
+                            onclick="selectEditCurrency('TJS')">TJS</button>
                     <button class="currency-edit-btn ${currentCurrency === 'RUB' ? 'active' : ''}" 
                             onclick="selectEditCurrency('RUB')">₽ RUB</button>
                 </div>
                 <div class="form-group">
                     <label>Дневной лимит (авто)</label>
                     <input type="text" id="edit-daily-display" class="amount-input" 
-                           readonly value="${symbol}${(currentIncome / 30).toFixed(2)}">
+                           readonly value="${symbol}${(displayIncome / 30).toFixed(2)}">
                 </div>
                 <button class="save-btn" onclick="saveBudgetEdit()">Сохранить</button>
             </div>
@@ -6436,15 +6408,17 @@ function editBudget() {
     
     document.body.appendChild(modal);
     
-    document.getElementById('edit-income-input')?.addEventListener('input', updateDailyLimit);
-    
-    setTimeout(() => {
-        const incomeInput = document.getElementById('edit-income-input');
-        if (incomeInput) {
+    // Обновление дневного лимита при вводе
+    const incomeInput = document.getElementById('edit-income-input');
+    if (incomeInput) {
+        incomeInput.addEventListener('input', updateDailyLimit);
+        
+        // Фокус на поле
+        setTimeout(() => {
             incomeInput.focus();
             incomeInput.select();
-        }
-    }, 100);
+        }, 100);
+    }
 }
 
 function closeEditBudgetModal() {
@@ -6478,6 +6452,8 @@ function updateDailyLimit() {
         const currency = activeBtn?.textContent.includes('USD') ? 'USD' : 
                         activeBtn?.textContent.includes('TJS') ? 'TJS' : 'RUB';
         const symbol = currencySymbols[currency];
+        
+        // ✅ ИСПРАВЛЕНИЕ: просто делим на 30, БЕЗ конвертации
         dailyDisplay.value = `${symbol}${(income / 30).toFixed(2)}`;
     }
 }
@@ -6501,18 +6477,24 @@ function saveBudgetEdit() {
         return;
     }
     
-    state.user.monthlyIncome = newIncome;
+    // ✅ ИСПРАВЛЕНИЕ: сохраняем доход БЕЗ конвертации!
+    state.user.monthlyIncome = newIncome; // Сохраняем как есть!
     state.user.dailyLimit = newIncome / 30;
     state.user.currency = newCurrency;
     
-    saveData();
+    console.log('💾 Сохранён бюджет:', {
+        income: newIncome,
+        currency: newCurrency,
+        dailyLimit: state.user.dailyLimit
+    });
     
+    saveData();
     closeEditBudgetModal();
     
     updateUI();
     renderAllScreens();
     
-    showToast('Бюджет успешно обновлен!', 'success');
+    showToast('Бюджет успешно обновлён!', 'success');
 }
 
 function showNotifications() {
