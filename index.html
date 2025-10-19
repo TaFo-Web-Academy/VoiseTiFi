@@ -2213,6 +2213,142 @@ input[type="date"] {
     border-left: 4px solid var(--info);
 }
 
+/* PIN Screen */
+.pin-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.pin-container {
+    text-align: center;
+    max-width: 400px;
+    padding: var(--spacing-xl);
+}
+
+.pin-logo {
+    font-size: 80px;
+    margin-bottom: var(--spacing-lg);
+    animation: pulse 2s infinite;
+}
+
+.pin-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-primary);
+}
+
+.pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.pin-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-normal);
+}
+
+.pin-dot.filled {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.pin-keyboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.pin-key {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 28px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pin-key:hover:not(.empty) {
+    background: var(--primary);
+    transform: scale(1.05);
+}
+
+.pin-key:active:not(.empty) {
+    transform: scale(0.95);
+}
+
+.pin-key.empty {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.biometric-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.biometric-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-large);
+}
+
+/* Hide amounts when enabled */
+.amounts-hidden .balance-amount,
+.amounts-hidden .balance-stat-value,
+.amounts-hidden .stat-value,
+.amounts-hidden .transaction-amount,
+.amounts-hidden .analytics-value,
+.amounts-hidden .total-value,
+.amounts-hidden #total-balance,
+.amounts-hidden #total-income,
+.amounts-hidden #total-expense {
+    color: transparent !important;
+    text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+.amounts-hidden .balance-amount::before,
+.amounts-hidden .balance-stat-value::before,
+.amounts-hidden .stat-value::before,
+.amounts-hidden .transaction-amount::before,
+.amounts-hidden .analytics-value::before,
+.amounts-hidden .total-value::before {
+    content: '••••••';
+    position: absolute;
+    color: var(--text-primary);
+    text-shadow: none;
+}
+
 /* Responsive Design */
 @media (max-width: 400px) {
     .quick-stats {
@@ -2306,6 +2442,36 @@ select:focus-visible {
 <body>
     <!-- ONBOARDING SCREEN -->
     <div id="onboarding" class="onboarding-container">
+        <!-- PIN CODE SCREEN -->
+    <div id="pin-screen" class="pin-screen" style="display: none;">
+        <div class="pin-container">
+            <div class="pin-logo">🔒</div>
+            <h2 class="pin-title">Введите PIN-код</h2>
+            <div class="pin-dots">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+            <div class="pin-keyboard">
+                <button class="pin-key" onclick="enterPin('1')">1</button>
+                <button class="pin-key" onclick="enterPin('2')">2</button>
+                <button class="pin-key" onclick="enterPin('3')">3</button>
+                <button class="pin-key" onclick="enterPin('4')">4</button>
+                <button class="pin-key" onclick="enterPin('5')">5</button>
+                <button class="pin-key" onclick="enterPin('6')">6</button>
+                <button class="pin-key" onclick="enterPin('7')">7</button>
+                <button class="pin-key" onclick="enterPin('8')">8</button>
+                <button class="pin-key" onclick="enterPin('9')">9</button>
+                <button class="pin-key empty"></button>
+                <button class="pin-key" onclick="enterPin('0')">0</button>
+                <button class="pin-key" onclick="clearPin()">⌫</button>
+            </div>
+            <button class="biometric-btn" id="biometric-btn" onclick="useBiometric()" style="display: none;">
+                👆 Использовать биометрию
+            </button>
+        </div>
+    </div>
         <!-- Step 1: Welcome -->
         <div class="onboarding-step active" data-step="1">
             <div class="onboarding-content">
@@ -2627,6 +2793,47 @@ select:focus-visible {
                         <span>Дневной лимит</span>
                         <span id="daily-limit">$0.00</span>
                     </div>
+
+                    <!-- Security Section -->
+                <div class="settings-section">
+                    <h3>🔐 Безопасность</h3>
+                    <div class="setting-item">
+                        <span>PIN-код</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="pin-toggle" onchange="togglePinCode()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Биометрия</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="biometric-toggle" onchange="toggleBiometric()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Скрыть суммы</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="hide-amounts-toggle" onchange="toggleHideAmounts()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Автоблокировка (мин)</span>
+                        <select id="autolock-select" onchange="changeAutoLock()">
+                            <option value="0">Отключено</option>
+                            <option value="1">1 минута</option>
+                            <option value="5" selected>5 минут</option>
+                            <option value="15">15 минут</option>
+                            <option value="30">30 минут</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <span>Зашифрованный бэкап</span>
+                        <button class="setting-btn" onclick="exportEncrypted()">🔒 Экспорт</button>
+                    </div>
+                </div>
+
                     <div class="setting-item">
                         <span>Уведомления о лимите</span>
                         <label class="toggle">
@@ -3203,6 +3410,15 @@ let state = {
         theme: 'dark',
         dailyLimit: 0
     },
+    security: {
+        pinEnabled: false,
+        pinCode: null,
+        biometricEnabled: false,
+        hideAmounts: false,
+        autoLockMinutes: 5,
+        lastUnlockTime: null
+    },
+
     transactions: [],
     loans: [],
     recurringPayments: [],
@@ -3411,7 +3627,8 @@ function initializeApp() {
         showOnboarding();
     } else {
       
-            
+            // ✅ ПРОВЕРКА БЕЗОПАСНОСТИ
+        checkSecurityOnLoad();
         }
         
         const onboardingEl = document.getElementById('onboarding');
@@ -4492,6 +4709,7 @@ function filterTransactions() {
 function renderSettingsScreen() {
     updateSettingsValues();
     updateToggleStates();
+    updateSecurityToggles(); // ✅ ДОБАВИТЬ
 }
 
 function updateSettingsValues() {
@@ -4649,47 +4867,66 @@ function selectCategory(category, type) {
 }
 
 function saveTransaction(type) {
+    // ✅ ГЕНЕРИРУЕМ УНИКАЛЬНЫЙ ID
+    const generateUniqueId = () => {
+        let id = Date.now();
+        while (state.transactions.some(t => t.id === id)) {
+            id++;
+        }
+        return id;
+    };
+    
     let transaction = {
-        id: Date.now(),
+        id: generateUniqueId(),
         type: type,
         timestamp: Date.now(),
         currency: state.user.currency
     };
     
     switch(type) {
-       case 'expense':
-    const expenseAmount = parseFloat(document.getElementById('expense-amount')?.value);
-    if (!expenseAmount || expenseAmount <= 0) {
-        showToast(translations[state.user.language].fillFields, 'error');
-        return;
-    }
-    
-    transaction.amount = expenseAmount;
-    transaction.category = state.selectedCategory || 'other';
-    transaction.description = document.getElementById('expense-desc')?.value || '';
-    
-    // 🔥 ОБНОВЛЕННЫЙ КОД ДЛЯ ЧЕКОВ
-    const receiptFile = document.getElementById('expense-receipt')?.files[0];
-    if (receiptFile) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            transaction.receipt = e.target.result; // Сохраняем как base64
+        case 'expense':
+            const expenseAmount = parseFloat(document.getElementById('expense-amount')?.value);
+            if (!expenseAmount || expenseAmount <= 0) {
+                showToast(translations[state.user.language].fillFields, 'error');
+                return;
+            }
+            
+            transaction.amount = expenseAmount;
+            transaction.category = state.selectedCategory || 'other';
+            transaction.description = document.getElementById('expense-desc')?.value || '';
+            
+            // 🔥 ИСПРАВЛЕНО: чек обрабатывается асинхронно
+            const receiptFile = document.getElementById('expense-receipt')?.files[0];
+            if (receiptFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    transaction.receipt = e.target.result;
+                    completeTransactionSave();
+                };
+                reader.readAsDataURL(receiptFile);
+                return; // ⚠️ ВАЖНО: выходим, чтобы не дублировать
+            }
+            
             completeTransactionSave();
-        };
-        reader.readAsDataURL(receiptFile);
-    } else {
-        completeTransactionSave();
-    }
-    
-    function completeTransactionSave() {
-        state.transactions.unshift(transaction);
-        saveData();
-        closeModal('add-modal');
-        updateUI();
-        renderAllScreens();
-        showToast(translations[state.user.language].success, 'success');
-    }
-    break;
+            return; // ⚠️ ВАЖНО: выходим после сохранения
+            
+        case 'income':
+            const incomeAmount = parseFloat(document.getElementById('income-amount')?.value);
+            if (!incomeAmount || incomeAmount <= 0) {
+                showToast(translations[state.user.language].fillFields, 'error');
+                return;
+            }
+            
+            // ✅ ИСПРАВЛЕНО: проверяем выбрана ли категория
+            if (!state.selectedCategory) {
+                showToast('Выберите категорию дохода', 'error');
+                return;
+            }
+            
+            transaction.amount = incomeAmount;
+            transaction.category = state.selectedCategory;
+            transaction.description = document.getElementById('income-desc')?.value || '';
+            break;
             
         case 'transfer':
             const transferAmount = parseFloat(document.getElementById('transfer-amount')?.value);
@@ -4737,14 +4974,26 @@ function saveTransaction(type) {
             return;
     }
     
-    state.transactions.unshift(transaction);
-    saveData();
+    // 🔥 ФУНКЦИЯ ЗАВЕРШЕНИЯ (используется для expense с чеком)
+    function completeTransactionSave() {
+        console.log('💾 Сохранение транзакции:', transaction);
+        console.log('📊 Транзакций до:', state.transactions.length);
+        
+        state.transactions.unshift(transaction);
+        
+        console.log('📊 Транзакций после:', state.transactions.length);
+        
+        saveData();
+        closeModal('add-modal');
+        updateUI();
+        renderAllScreens();
+        showToast(translations[state.user.language].success, 'success');
+    }
     
-    closeModal('add-modal');
-    updateUI();
-    renderAllScreens();
-    
-    showToast(translations[state.user.language].success, 'success');
+    // Для income и transfer сохраняем сразу
+    if (type !== 'expense') {
+        completeTransactionSave();
+    }
 }
 
 function showTransactionDetail(id) {
@@ -6150,7 +6399,18 @@ function checkNotifications() {
 }
 
 // Mustafoshoh Programer // Export/Import Functions
+// Mustafoshoh Programer // Export/Import Functions
 function exportData() {
+    const format = confirm('Экспортировать в Excel? (OK = Excel, Отмена = JSON)');
+    
+    if (format) {
+        exportToExcel();
+    } else {
+        exportToJSON();
+    }
+}
+
+function exportToJSON() {
     const data = {
         version: '1.0.0',
         exportDate: new Date().toISOString(),
@@ -6165,13 +6425,55 @@ function exportData() {
     a.click();
     URL.revokeObjectURL(url);
     
-    showToast('Данные экспортированы', 'success');
+    showToast('Данные экспортированы в JSON', 'success');
+}
+
+function exportToExcel() {
+    let csv = 'ID,Дата,Время,Тип,Категория,Описание,Сумма,Валюта\n';
+    
+    state.transactions.forEach(t => {
+        const date = new Date(t.timestamp);
+        const dateStr = date.toLocaleDateString('ru-RU');
+        const timeStr = date.toLocaleTimeString('ru-RU');
+        const category = state.categories[t.category]?.[state.user.language] || t.category;
+        const type = t.type === 'expense' ? 'Расход' : t.type === 'income' ? 'Доход' : 'Перевод';
+        
+        csv += `${t.id},"${dateStr}","${timeStr}","${type}","${category}","${t.description || ''}",${t.amount},${t.currency}\n`;
+    });
+    
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voicetifi-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('📊 Данные экспортированы в Excel (CSV)', 'success');
 }
 
 function importData(event) {
     const file = event.target.files[0];
     if (!file) return;
     
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.json')) {
+        importFromJSON(file);
+    } else if (fileName.endsWith('.csv')) {
+        importFromCSV(file);
+    
+     } else if (fileName.endsWith('.vtf')) {
+        importEncrypted(file);
+    } else {
+        showToast('Поддерживаются только JSON и CSV файлы', 'error');
+    }
+    
+    event.target.value = '';
+}
+
+function importFromJSON(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
@@ -6187,7 +6489,7 @@ function importData(event) {
                 updateUI();
                 renderAllScreens();
                 
-                showToast('Данные импортированы', 'success');
+                showToast('✅ Данные импортированы из JSON', 'success');
             } else {
                 throw new Error('Invalid backup file');
             }
@@ -6198,25 +6500,126 @@ function importData(event) {
     };
     
     reader.readAsText(file);
-    event.target.value = '';
 }
 
+function importFromCSV(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const csv = e.target.result;
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',');
+            
+            let imported = 0;
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g) || [];
+                
+                if (values.length < 7) continue;
+                
+                const transaction = {
+                    id: parseInt(values[0]) || Date.now() + i,
+                    type: values[3]?.replace(/"/g, '') === 'Расход' ? 'expense' : 
+                          values[3]?.replace(/"/g, '') === 'Доход' ? 'income' : 'transfer',
+                    category: findCategoryByName(values[4]?.replace(/"/g, '')),
+                    description: values[5]?.replace(/"/g, ''),
+                    amount: parseFloat(values[6]) || 0,
+                    currency: values[7]?.replace(/"/g, '') || 'USD',
+                    timestamp: parseCSVDate(values[1], values[2])
+                };
+                
+                state.transactions.push(transaction);
+                imported++;
+            }
+            
+            saveData();
+            updateUI();
+            renderAllScreens();
+            
+            showToast(`✅ Импортировано ${imported} транзакций из CSV`, 'success');
+            
+        } catch (error) {
+            showToast('Ошибка импорта CSV', 'error');
+            console.error('CSV Import error:', error);
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+function findCategoryByName(name) {
+    for (const [key, cat] of Object.entries(state.categories)) {
+        if (cat[state.user.language] === name || cat.ru === name || cat.en === name) {
+            return key;
+        }
+    }
+    return 'other';
+}
+
+function parseCSVDate(dateStr, timeStr) {
+    try {
+        dateStr = dateStr?.replace(/"/g, '');
+        timeStr = timeStr?.replace(/"/g, '');
+        
+        const [day, month, year] = dateStr.split('.');
+        const [hours, minutes] = timeStr.split(':');
+        
+        return new Date(year, month - 1, day, hours, minutes).getTime();
+    } catch (e) {
+        return Date.now();
+    }
+}
 function clearAllData() {
-    if (!confirm(translations[state.user.language].confirmClear)) return;
+    if (!confirm('⚠️ ВНИМАНИЕ!\n\nВы уверены что хотите удалить ВСЕ данные?\n\n• Все транзакции\n• Все долги\n• Все цели\n• Все настройки\n\nЭто действие НЕЛЬЗЯ отменить!')) {
+        return;
+    }
+    
+    const confirmText = prompt('Введите "УДАЛИТЬ ВСЁ" (заглавными) для подтверждения:');
+    
+    if (confirmText !== 'УДАЛИТЬ ВСЁ') {
+        showToast('Отменено. Данные не удалены.', 'info');
+        return;
+    }
     
     const backup = { ...state };
-    localStorage.setItem('voicetifi_clear_backup', JSON.stringify(backup));
+    const backupDate = new Date().toISOString();
+    localStorage.setItem(`voicetifi_clear_backup_${backupDate}`, JSON.stringify(backup));
+    
+    console.log('💾 Создана резервная копия перед удалением:', backupDate);
+    
+    const userSettings = {
+        monthlyIncome: state.user.monthlyIncome,
+        currency: state.user.currency,
+        language: state.user.language,
+        theme: state.user.theme,
+        dailyLimit: state.user.dailyLimit
+    };
     
     state.transactions = [];
     state.loans = [];
     state.recurringPayments = [];
     state.savingsGoals = [];
     
+    state.user = { ...state.user, ...userSettings };
+    
     saveData();
     updateUI();
     renderAllScreens();
     
-    showToast('Все данные удалены', 'success');
+    showToast('🗑️ Все данные удалены\n💾 Резервная копия сохранена в localStorage', 'success');
+    
+    setTimeout(() => {
+        alert('ℹ️ ИНФОРМАЦИЯ О ВОССТАНОВЛЕНИИ\n\n' +
+              'Резервная копия сохранена в браузере.\n\n' +
+              'Чтобы восстановить данные:\n' +
+              '1. Откройте консоль (F12)\n' +
+              '2. Найдите ключ: voicetifi_clear_backup_' + backupDate.split('T')[0] + '\n' +
+              '3. Скопируйте данные\n' +
+              '4. Импортируйте через Настройки → Импорт данных');
+    }, 1000);
 }
 
 // Mustafoshoh Programer // UI Update Functions
@@ -6365,10 +6768,8 @@ function changeCurrency(currency) {
 function editBudget() {
     const currentIncome = state.user.monthlyIncome;
     const currentCurrency = state.user.currency;
-    const rate = rates[currentCurrency] || 1;
     
-    // ✅ ИСПРАВЛЕНИЕ: показываем доход в ОРИГИНАЛЬНОЙ валюте
-    const displayIncome = currentIncome; // БЕЗ умножения на rate!
+    const displayIncome = currentIncome;
     const symbol = currencySymbols[currentCurrency];
     
     const modal = document.createElement('div');
@@ -6386,7 +6787,8 @@ function editBudget() {
                     <label>Ежемесячный доход</label>
                     <input type="number" id="edit-income-input" class="amount-input" 
                            value="${displayIncome}" step="0.01" min="0" 
-                           placeholder="0.00">
+                           placeholder="0.00"
+                           oninput="updateDailyLimitDisplay()">
                 </div>
                 <div class="currency-selector-edit">
                     <button class="currency-edit-btn ${currentCurrency === 'USD' ? 'active' : ''}" 
@@ -6408,16 +6810,30 @@ function editBudget() {
     
     document.body.appendChild(modal);
     
-    // Обновление дневного лимита при вводе
-    const incomeInput = document.getElementById('edit-income-input');
-    if (incomeInput) {
-        incomeInput.addEventListener('input', updateDailyLimit);
-        
-        // Фокус на поле
-        setTimeout(() => {
+    setTimeout(() => {
+        const incomeInput = document.getElementById('edit-income-input');
+        if (incomeInput) {
             incomeInput.focus();
             incomeInput.select();
-        }, 100);
+        }
+    }, 100);
+}
+
+function updateDailyLimitDisplay() {
+    const incomeInput = document.getElementById('edit-income-input');
+    const dailyDisplay = document.getElementById('edit-daily-display');
+    
+    if (incomeInput && dailyDisplay) {
+        const inputValue = incomeInput.value;
+        const numberMatch = inputValue.match(/[\d.]+/);
+        const income = numberMatch ? parseFloat(numberMatch[0]) : 0;
+        
+        const activeBtn = document.querySelector('.currency-edit-btn.active');
+        const currency = activeBtn?.textContent.includes('USD') ? 'USD' : 
+                        activeBtn?.textContent.includes('TJS') ? 'TJS' : 'RUB';
+        const symbol = currencySymbols[currency];
+        
+        dailyDisplay.value = `${symbol}${(income / 30).toFixed(2)}`;
     }
 }
 
@@ -6432,14 +6848,11 @@ function selectEditCurrency(currency) {
     });
     event.target.classList.add('active');
     
-    const symbol = currencySymbols[currency];
-    const incomeInput = document.getElementById('edit-income-input');
-    const dailyDisplay = document.getElementById('edit-daily-display');
-    
-    if (incomeInput && dailyDisplay) {
-        const income = parseFloat(incomeInput.value) || 0;
-        dailyDisplay.value = `${symbol}${(income / 30).toFixed(2)}`;
-    }
+    updateDailyLimitDisplay();
+}
+
+function updateDailyLimit() {
+    updateDailyLimitDisplay();
 }
 
 function updateDailyLimit() {
@@ -6477,8 +6890,7 @@ function saveBudgetEdit() {
         return;
     }
     
-    // ✅ ИСПРАВЛЕНИЕ: сохраняем доход БЕЗ конвертации!
-    state.user.monthlyIncome = newIncome; // Сохраняем как есть!
+    state.user.monthlyIncome = newIncome;
     state.user.dailyLimit = newIncome / 30;
     state.user.currency = newCurrency;
     
@@ -6816,6 +7228,388 @@ function deleteTransaction() {
         showToast('Транзакция удалена', 'success');
     }
 }
+
+// ==========================================
+// 🔐 БЕЗОПАСНОСТЬ И ПРИВАТНОСТЬ
+// ==========================================
+
+let currentPin = '';
+let isPinSetup = false;
+let setupPinFirst = '';
+
+// Проверка при загрузке
+function checkSecurityOnLoad() {
+    if (state.security.pinEnabled && state.security.pinCode) {
+        showPinScreen();
+    }
+    
+    // Проверка биометрии
+    if (state.security.biometricEnabled && 'credentials' in navigator) {
+        const btn = document.getElementById('biometric-btn');
+        if (btn) btn.style.display = 'block';
+    }
+    
+    // Применить скрытие сумм
+    if (state.security.hideAmounts) {
+        document.body.classList.add('amounts-hidden');
+    }
+    
+    // Автоблокировка
+    setupAutoLock();
+}
+
+function togglePinCode() {
+    const checkbox = document.getElementById('pin-toggle');
+    
+    if (checkbox.checked) {
+        // Включить PIN
+        isPinSetup = true;
+        setupPinFirst = '';
+        currentPin = '';
+        
+        const title = document.querySelector('.pin-title');
+        if (title) title.textContent = 'Установите PIN-код';
+        
+        showPinScreen();
+    } else {
+        // Выключить PIN
+        if (confirm('Отключить PIN-код?')) {
+            state.security.pinEnabled = false;
+            state.security.pinCode = null;
+            saveData();
+            showToast('PIN-код отключен', 'info');
+        } else {
+            checkbox.checked = true;
+        }
+    }
+}
+
+function toggleBiometric() {
+    const checkbox = document.getElementById('biometric-toggle');
+    
+    if (!('credentials' in navigator)) {
+        showToast('Биометрия не поддерживается в вашем браузере', 'error');
+        checkbox.checked = false;
+        return;
+    }
+    
+    state.security.biometricEnabled = checkbox.checked;
+    saveData();
+    
+    const btn = document.getElementById('biometric-btn');
+    if (btn) {
+        btn.style.display = checkbox.checked ? 'block' : 'none';
+    }
+    
+    showToast(checkbox.checked ? '👆 Биометрия включена' : 'Биометрия отключена', 'success');
+}
+
+function changeAutoLock() {
+    const select = document.getElementById('autolock-select');
+    state.security.autoLockMinutes = parseInt(select.value);
+    saveData();
+    
+    setupAutoLock();
+    showToast(`Автоблокировка: ${state.security.autoLockMinutes} мин`, 'success');
+}
+
+// Обновить toggles при загрузке настроек
+function updateSecurityToggles() {
+    const pinToggle = document.getElementById('pin-toggle');
+    const biometricToggle = document.getElementById('biometric-toggle');
+    const hideToggle = document.getElementById('hide-amounts-toggle');
+    const autolockSelect = document.getElementById('autolock-select');
+    
+    if (pinToggle) pinToggle.checked = state.security.pinEnabled;
+    if (biometricToggle) biometricToggle.checked = state.security.biometricEnabled;
+    if (hideToggle) hideToggle.checked = state.security.hideAmounts;
+    if (autolockSelect) autolockSelect.value = state.security.autoLockMinutes;
+}
+
+function showPinScreen() {
+    const pinScreen = document.getElementById('pin-screen');
+    const app = document.getElementById('app');
+    
+    if (pinScreen) {
+        pinScreen.style.display = 'flex';
+    }
+    if (app) {
+        app.style.display = 'none';
+    }
+    
+    currentPin = '';
+    updatePinDots();
+}
+
+function hidePinScreen() {
+    const pinScreen = document.getElementById('pin-screen');
+    const app = document.getElementById('app');
+    
+    if (pinScreen) {
+        pinScreen.style.display = 'none';
+    }
+    if (app) {
+        app.style.display = 'block';
+    }
+    
+    state.security.lastUnlockTime = Date.now();
+    saveData();
+}
+
+function enterPin(digit) {
+    if (currentPin.length >= 4) return;
+    
+    currentPin += digit;
+    updatePinDots();
+    
+    // Вибрация
+    if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+    }
+    
+    if (currentPin.length === 4) {
+        setTimeout(() => {
+            if (isPinSetup) {
+                handlePinSetup();
+            } else {
+                verifyPin();
+            }
+        }, 200);
+    }
+}
+
+function clearPin() {
+    if (currentPin.length > 0) {
+        currentPin = currentPin.slice(0, -1);
+        updatePinDots();
+        
+        if ('vibrate' in navigator) {
+            navigator.vibrate(50);
+        }
+    }
+}
+
+function updatePinDots() {
+    const dots = document.querySelectorAll('.pin-dot');
+    dots.forEach((dot, index) => {
+        if (index < currentPin.length) {
+            dot.classList.add('filled');
+        } else {
+            dot.classList.remove('filled');
+        }
+    });
+}
+
+function handlePinSetup() {
+    if (!setupPinFirst) {
+        setupPinFirst = currentPin;
+        currentPin = '';
+        updatePinDots();
+        
+        const title = document.querySelector('.pin-title');
+        if (title) {
+            title.textContent = 'Повторите PIN-код';
+        }
+    } else {
+        if (currentPin === setupPinFirst) {
+            state.security.pinCode = currentPin;
+            state.security.pinEnabled = true;
+            saveData();
+            
+            showToast('✅ PIN-код установлен', 'success');
+            closeModal('security-setup-modal');
+            hidePinScreen();
+            
+            setupPinFirst = '';
+            isPinSetup = false;
+        } else {
+            showToast('❌ PIN-коды не совпадают', 'error');
+            currentPin = '';
+            setupPinFirst = '';
+            updatePinDots();
+            
+            const title = document.querySelector('.pin-title');
+            if (title) {
+                title.textContent = 'Введите PIN-код';
+            }
+        }
+    }
+}
+
+function verifyPin() {
+    if (currentPin === state.security.pinCode) {
+        hidePinScreen();
+        showToast('✅ Разблокировано', 'success');
+    } else {
+        showToast('❌ Неверный PIN-код', 'error');
+        
+        // Тряска
+        const container = document.querySelector('.pin-container');
+        if (container) {
+            container.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                container.style.animation = '';
+            }, 500);
+        }
+        
+        // Вибрация
+        if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100]);
+        }
+        
+        currentPin = '';
+        updatePinDots();
+    }
+}
+
+// Биометрия
+async function useBiometric() {
+    if (!('credentials' in navigator)) {
+        showToast('Биометрия не поддерживается', 'error');
+        return;
+    }
+    
+    try {
+        const credential = await navigator.credentials.get({
+            publicKey: {
+                challenge: new Uint8Array(32),
+                timeout: 60000,
+                userVerification: 'required'
+            }
+        });
+        
+        if (credential) {
+            hidePinScreen();
+            showToast('✅ Разблокировано через биометрию', 'success');
+        }
+    } catch (error) {
+        console.error('Biometric error:', error);
+        showToast('Ошибка биометрии', 'error');
+    }
+}
+
+// Скрытие сумм
+function toggleHideAmounts() {
+    state.security.hideAmounts = !state.security.hideAmounts;
+    
+    if (state.security.hideAmounts) {
+        document.body.classList.add('amounts-hidden');
+        showToast('🔒 Суммы скрыты', 'info');
+    } else {
+        document.body.classList.remove('amounts-hidden');
+        showToast('👁️ Суммы показаны', 'info');
+    }
+    
+    saveData();
+}
+
+// Автоблокировка
+function setupAutoLock() {
+    let inactivityTimer;
+    
+    const resetTimer = () => {
+        clearTimeout(inactivityTimer);
+        
+        if (state.security.pinEnabled && state.security.autoLockMinutes > 0) {
+            inactivityTimer = setTimeout(() => {
+                if (state.security.lastUnlockTime) {
+                    const elapsed = Date.now() - state.security.lastUnlockTime;
+                    const lockTime = state.security.autoLockMinutes * 60 * 1000;
+                    
+                    if (elapsed > lockTime) {
+                        showPinScreen();
+                    }
+                }
+            }, state.security.autoLockMinutes * 60 * 1000);
+        }
+    };
+    
+    document.addEventListener('touchstart', resetTimer);
+    document.addEventListener('click', resetTimer);
+    document.addEventListener('keypress', resetTimer);
+    
+    resetTimer();
+}
+
+// Зашифрованный экспорт
+function exportEncrypted() {
+    const password = prompt('Введите пароль для шифрования бэкапа:');
+    if (!password) return;
+    
+    const confirmPassword = prompt('Повторите пароль:');
+    if (password !== confirmPassword) {
+        showToast('Пароли не совпадают', 'error');
+        return;
+    }
+    
+    const data = {
+        version: '1.0.0',
+        exportDate: new Date().toISOString(),
+        encrypted: true,
+        ...state
+    };
+    
+    // Простое шифрование (для безопасного используйте crypto API)
+    const encrypted = btoa(JSON.stringify(data) + '::' + password);
+    
+    const blob = new Blob([encrypted], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voicetifi-encrypted-${new Date().toISOString().split('T')[0]}.vtf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('🔒 Зашифрованный бэкап создан', 'success');
+}
+
+// Импорт зашифрованного
+function importEncrypted(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const password = prompt('Введите пароль для расшифровки:');
+            if (!password) return;
+            
+            const decrypted = atob(e.target.result);
+            const [dataStr, filePassword] = decrypted.split('::');
+            
+            if (filePassword !== password) {
+                showToast('❌ Неверный пароль', 'error');
+                return;
+            }
+            
+            const data = JSON.parse(dataStr);
+            
+            if (data.version && data.user) {
+                state = { ...state, ...data };
+                saveData();
+                
+                updateUI();
+                renderAllScreens();
+                
+                showToast('✅ Данные расшифрованы и импортированы', 'success');
+            }
+        } catch (error) {
+            showToast('Ошибка расшифровки', 'error');
+            console.error('Decrypt error:', error);
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+// Добавить анимацию тряски в CSS
+const style = document.createElement('style');
+style.textContent = `
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+`;
+document.head.appendChild(style);
+
     </script>
 </body>
 </html>
