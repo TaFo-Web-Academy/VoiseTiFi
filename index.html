@@ -2438,10 +2438,106 @@ select:focus-visible {
         color: black;
     }
 }
+/* 🔥 ДОБАВЬТЕ В КОНЕЦ CSS ФАЙЛА */
+
+/* Category Limits Styles */
+.category-limits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.category-limit-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 12px;
+}
+
+.category-limit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.category-limit-value {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.category-limit-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.category-limit-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-glass);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.category-limit-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.category-limit-spent {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Edit Category Limits */
+.category-limits-edit {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.category-limits-edit .form-group {
+    margin-bottom: 15px;
+}
+
+.category-limits-edit .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.category-limit-input {
+    margin-top: 5px;
+}
+
+/* Smart Notifications Badge */
+.notification-badge.warning {
+    background: var(--warning);
+    animation: pulse 1.5s infinite;
+}
+
+.notification-badge.danger {
+    background: var(--danger);
+    animation: pulse 1s infinite;
+}
+
+/* Confetti Animation */
+@keyframes confetti-fall {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
 </style>
 <body>
     <!-- ONBOARDING SCREEN -->
-    <div id="onboarding" class="onboarding-container">
+   
         <!-- PIN CODE SCREEN -->
     <div id="pin-screen" class="pin-screen" style="display: none;">
         <div class="pin-container">
@@ -2472,6 +2568,7 @@ select:focus-visible {
             </button>
         </div>
     </div>
+     <div id="onboarding" class="onboarding-container">
         <!-- Step 1: Welcome -->
         <div class="onboarding-step active" data-step="1">
             <div class="onboarding-content">
@@ -3626,36 +3723,40 @@ function initializeApp() {
     if (state.isFirstLaunch) {
         showOnboarding();
     } else {
-      
-            // ✅ ПРОВЕРКА БЕЗОПАСНОСТИ
         checkSecurityOnLoad();
-        }
-        
-        const onboardingEl = document.getElementById('onboarding');
-        const appEl = document.getElementById('app');
-        
-        if (onboardingEl) {
-            onboardingEl.style.display = 'none';
-        }
-        
-        if (appEl) {
-            appEl.style.display = 'block';
-            appEl.style.opacity = '1';
-        }
-        
-        applyTheme();
-        updateUI();
-        renderAllScreens();
-        
-        // Инициализация с задержкой
-        setTimeout(() => {
-            if (typeof Chart !== 'undefined') {
-                initializeCharts();
-            }
-            initializeVoiceRecognition();
-        }, 200);
     }
-
+    
+    const onboardingEl = document.getElementById('onboarding');
+    const appEl = document.getElementById('app');
+    
+    if (onboardingEl) {
+        onboardingEl.style.display = 'none';
+    }
+    
+    if (appEl) {
+        appEl.style.display = 'block';
+        appEl.style.opacity = '1';
+    }
+    
+    // 🔥 ВАЖНО: Инициализируем лимиты категорий
+    initializeCategoryLimits();
+    
+    applyTheme();
+    updateUI();
+    renderAllScreens();
+    
+    // 🔥 ЗАПУСКАЕМ УМНЫЕ УВЕДОМЛЕНИЯ С ЗАДЕРЖКОЙ
+    setTimeout(() => {
+        checkSmartNotifications();
+    }, 3000);
+    
+    setTimeout(() => {
+        if (typeof Chart !== 'undefined') {
+            initializeCharts();
+        }
+        initializeVoiceRecognition();
+    }, 200);
+}
 // Функция для добавления тестовых данных
 
 // Mustafoshoh Programer // Onboarding
@@ -3668,6 +3769,18 @@ function showOnboarding() {
     if (onboardingEl) onboardingEl.classList.add('active');
     if (appEl) appEl.style.display = 'none';
 }
+
+// 🔥 ВРЕМЕННАЯ ФУНКЦИЯ ДЛЯ ТЕСТИРОВАНИЯ
+function testCategoryLimits() {
+    console.log('🧪 Testing category limits...');
+    console.log('State category limits:', state.categoryLimits);
+    console.log('Settings screen:', document.getElementById('settings-screen'));
+    
+    // Принудительно показываем раздел
+    renderCategoryLimitsSection();
+}
+
+// Вызовите в консоли браузера: testCategoryLimits()
 
 function addTestData() {
     // ❌ ТЕСТОВЫЕ ДАННЫЕ ОТКЛЮЧЕНЫ
@@ -4707,9 +4820,263 @@ function filterTransactions() {
 
 // Mustafoshoh Programer // Settings Screen
 function renderSettingsScreen() {
-    updateSettingsValues();
+   updateSettingsValues();
     updateToggleStates();
     updateSecurityToggles(); // ✅ ДОБАВИТЬ
+
+      // 🔥 ИСПРАВЛЕННЫЙ КОД - ДОБАВЛЯЕМ ЛИМИТЫ КАТЕГОРИЙ
+    setTimeout(() => {
+        renderCategoryLimitsSection();
+    }, 100);
+}
+
+// 🔥 ДОБАВЬТЕ ЭТУ ФУНКЦИЮ СРАЗУ ПОСЛЕ renderSettingsScreen()
+function renderCategoryLimitsSection() {
+    const settingsContent = document.querySelector('#settings-screen .screen-content');
+    if (!settingsContent) {
+        console.log('❌ Settings content not found');
+        return;
+    }
+    
+    // Удаляем старый раздел если есть
+    const oldSection = document.getElementById('category-limits-section');
+    if (oldSection) {
+        oldSection.remove();
+    }
+    
+    // Создаем новый раздел
+    const limitsSection = document.createElement('div');
+    limitsSection.className = 'settings-section';
+    limitsSection.id = 'category-limits-section';
+    limitsSection.innerHTML = `
+        <h3>🎯 Лимиты по категориям</h3>
+        <div class="category-limits-list" id="category-limits-list">
+            ${renderCategoryLimitsList()}
+        </div>
+        <button class="setting-btn" onclick="editAllCategoryLimits()" style="margin-top: 10px; width: 100%;">
+            ✏️ Редактировать все лимиты
+        </button>
+    `;
+    
+    // Находим раздел "Профиль и бюджет" и вставляем после него
+    const profileSection = settingsContent.querySelector('.settings-section');
+    if (profileSection) {
+        profileSection.parentNode.insertBefore(limitsSection, profileSection.nextSibling);
+        console.log('✅ Category limits section added');
+    } else {
+        // Если не нашли, добавляем в начало
+        settingsContent.prepend(limitsSection);
+        console.log('✅ Category limits section added to start');
+    }
+}
+
+function renderCategoryLimitsList() {
+    if (!state.categoryLimits) initializeCategoryLimits();
+    
+    const expenseCategories = Object.keys(state.categories).filter(key => {
+        const cat = state.categories[key];
+        // Показываем только категории расходов
+        return !['salary', 'freelance', 'gift', 'investment'].includes(key);
+    });
+    
+    if (expenseCategories.length === 0) {
+        return '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">Нет категорий расходов</div>';
+    }
+    
+    return expenseCategories.map(category => {
+        const cat = state.categories[category];
+        const limit = state.categoryLimits[category] || 0;
+        const spent = getCategorySpentThisMonth(category);
+        const percent = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+        
+        let progressColor = '#10b981'; // green
+        if (percent > 90) progressColor = '#ef4444'; // red
+        else if (percent > 70) progressColor = '#f59e0b'; // yellow
+        
+        return `
+            <div class="category-limit-item">
+                <div class="category-limit-header">
+                    <span>${cat.icon} ${cat[state.user.language]}</span>
+                    <span class="category-limit-value">${formatCurrency(limit)}</span>
+                </div>
+                <div class="category-limit-progress">
+                    <div class="category-limit-progress-bar">
+                        <div class="category-limit-progress-fill" 
+                             style="width: ${percent}%; background: ${progressColor};">
+                        </div>
+                    </div>
+                    <span class="category-limit-spent">${formatCurrency(spent)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getCategorySpentThisMonth(category) {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthExpenses = state.transactions.filter(t => {
+        if (t.type !== 'expense') return false;
+        if (t.category !== category) return false;
+        
+        const date = new Date(t.timestamp);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    const rate = rates[state.user.currency] || 1;
+    return monthExpenses.reduce((sum, t) => {
+        const txRate = rates[t.currency] || 1;
+        const convertedAmount = (t.amount * txRate) / rate;
+        return sum + convertedAmount;
+    }, 0);
+}
+   
+
+function editAllCategoryLimits() {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Лимиты по категориям</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-limits-edit" id="category-limits-edit">
+                    ${renderCategoryLimitsEdit()}
+                </div>
+                <button class="save-btn" onclick="saveCategoryLimits()">Сохранить лимиты</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function renderCategoryLimitsEdit() {
+    if (!state.categoryLimits) initializeCategoryLimits();
+    
+    const expenseCategories = Object.keys(state.categories).filter(key => {
+        // Только категории расходов
+        return !['salary', 'freelance', 'gift', 'investment'].includes(key);
+    });
+    
+    return expenseCategories.map(category => {
+        const cat = state.categories[category];
+        const limit = state.categoryLimits[category] || 0;
+        const spent = getCategorySpentThisMonth(category);
+        
+        return `
+            <div class="form-group">
+                <label>
+                    ${cat.icon} ${cat[state.user.language]}
+                    <span style="color: var(--text-secondary); font-size: 12px;">
+                        (потрачено: ${formatCurrency(spent)})
+                    </span>
+                </label>
+                <input type="number" 
+                       class="desc-input category-limit-input" 
+                       data-category="${category}"
+                       value="${limit}"
+                       placeholder="0.00"
+                       step="0.01"
+                       min="0">
+            </div>
+        `;
+    }).join('');
+}
+
+function saveCategoryLimits() {
+    const inputs = document.querySelectorAll('.category-limit-input');
+    let hasChanges = false;
+    
+    inputs.forEach(input => {
+        const category = input.dataset.category;
+        const limit = parseFloat(input.value) || 0;
+        
+        if (state.categoryLimits[category] !== limit) {
+            state.categoryLimits[category] = limit;
+            hasChanges = true;
+        }
+    });
+    
+    if (hasChanges) {
+        saveData();
+        
+        // Обновляем интерфейс
+        const limitsList = document.getElementById('category-limits-list');
+        if (limitsList) {
+            limitsList.innerHTML = renderCategoryLimitsList();
+        }
+        
+        showToast('🎯 Лимиты сохранены!', 'success');
+    }
+    
+    // Закрываем модалку
+    const modal = document.querySelector('.modal.active');
+    if (modal) modal.remove();
+}
+function renderCategoryLimitsEdit() {
+    if (!state.categoryLimits) initializeCategoryLimits();
+    
+    const expenseCategories = Object.keys(state.categories).filter(key => {
+        const cat = state.categories[key];
+        return !cat.isCustom || cat.isExpense !== false;
+    });
+    
+    return expenseCategories.map(category => {
+        const cat = state.categories[category];
+        const limit = state.categoryLimits[category] || 0;
+        
+        return `
+            <div class="form-group">
+                <label>${cat.icon} ${cat[state.user.language]}</label>
+                <input type="number" 
+                       class="desc-input category-limit-input" 
+                       data-category="${category}"
+                       value="${limit}"
+                       placeholder="0.00"
+                       step="0.01"
+                       min="0">
+            </div>
+        `;
+    }).join('');
+}
+
+function saveCategoryLimits() {
+    const inputs = document.querySelectorAll('.category-limit-input');
+    inputs.forEach(input => {
+        const category = input.dataset.category;
+        const limit = parseFloat(input.value) || 0;
+        state.categoryLimits[category] = limit;
+    });
+    
+    saveData();
+    
+    // Обновляем интерфейс
+    const limitsList = document.getElementById('category-limits-list');
+    if (limitsList) {
+        limitsList.innerHTML = renderCategoryLimitsList();
+    }
+    
+    // Закрываем модалку
+    const modal = document.querySelector('.modal.active');
+    if (modal) modal.remove();
+    
+    showToast('Лимиты сохранены', 'success');
+}
+
+// 🔥 ОБНОВИТЕ renderSettingsScreen()
+function renderSettingsScreen() {
+    updateSettingsValues();
+    updateToggleStates();
+    updateSecurityToggles();
+    
+    // 🔥 ДОБАВЛЯЕМ РАЗДЕЛ ЛИМИТОВ
+    setTimeout(() => {
+        renderCategoryLimitsSection();
+    }, 100);
 }
 
 function updateSettingsValues() {
@@ -6231,7 +6598,7 @@ function showConfetti() {
 // Mustafoshoh Programer // Utility Functions
 function formatCurrency(amount) {
     const symbol = currencySymbols[state.user.currency];
-    return `${symbol}${amount.toFixed(2)}`;
+    return `${symbol}${Number(amount) ? Number(amount).toFixed(2) : "0.00"}`;
 }
 
 function formatDate(timestamp) {
@@ -6396,6 +6763,291 @@ function checkNotifications() {
     if (state.settings.notifications.debt && state.loans.length > 0) {
         showToast(`У вас ${state.loans.length} активных долгов`, 'info');
     }
+}
+
+// Mustafoshoh Programer // Smart Notifications & Category Limits
+// ==========================================
+
+// 🔥 ДОБАВЬТЕ ЭТОТ КОД ПОСЛЕ ФУНКЦИИ checkNotifications()
+
+// Category Limits System
+// Category Limits System
+function initializeCategoryLimits() {
+    if (!state.categoryLimits) {
+        state.categoryLimits = {
+            food: 300,
+            transport: 100,
+            restaurant: 200,
+            health: 150,
+            clothes: 250,
+            entertainment: 100,
+            bills: 500,
+            other: 50
+        };
+        console.log('✅ Category limits initialized');
+    }
+}
+
+// Smart Notifications System
+function checkSmartNotifications() {
+    const notifications = [];
+    
+    // 1. Уведомление "Забыли добавить расходы сегодня?"
+    if (!hasTransactionsToday() && isEveningTime()) {
+        notifications.push({
+            type: 'info',
+            icon: '🤔',
+            title: 'Не забыли добавить расходы?',
+            text: 'Вы не добавляли расходы сегодня - забыли?',
+            priority: 1
+        });
+    }
+    
+    // 2. Уведомления о предстоящих платежах
+    const upcomingPayments = getUpcomingPayments();
+    if (upcomingPayments.length > 0) {
+        upcomingPayments.forEach(payment => {
+            notifications.push({
+                type: 'warning',
+                icon: '⏰',
+                title: 'Напоминание о платеже',
+                text: `Завтра нужно заплатить: ${payment.name} - ${formatCurrency(payment.amount)}`,
+                priority: 2
+            });
+        });
+    }
+    
+    // 3. Уведомления о превышении лимитов категорий
+    const exceededLimits = checkCategoryLimits();
+    if (exceededLimits.length > 0) {
+        exceededLimits.forEach(limit => {
+            notifications.push({
+                type: 'danger',
+                icon: '🚨',
+                title: 'Превышен лимит категории',
+                text: `Вы тратите на ${limit.categoryName} на ${limit.overPercent}% больше обычного`,
+                priority: 3
+            });
+        });
+    }
+    
+    // Сортируем по приоритету и показываем
+    notifications.sort((a, b) => b.priority - a.priority);
+    
+    // Показываем только 3 самых важных уведомления
+    displaySmartNotifications(notactions.slice(0, 3));
+}
+
+function hasTransactionsToday() {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return state.transactions.some(t => 
+        t.timestamp >= todayStart.getTime() && t.type === 'expense'
+    );
+}
+
+function isEveningTime() {
+    const hour = new Date().getHours();
+    return hour >= 18 && hour <= 22; // Вечером с 18:00 до 22:00
+}
+
+function getUpcomingPayments() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    const upcoming = [];
+    
+    // Проверяем регулярные платежи
+    state.recurringPayments.forEach(payment => {
+        if (payment.isActive && payment.nextDate.startsWith(tomorrowStr)) {
+            upcoming.push(payment);
+        }
+    });
+    
+    // Проверяем долги
+    state.loans.forEach(loan => {
+        if (!loan.isPaid && loan.date === tomorrowStr) {
+            upcoming.push({
+                name: `Долг: ${loan.name}`,
+                amount: loan.amount,
+                type: 'loan'
+            });
+        }
+    });
+    
+    return upcoming;
+}
+
+function checkCategoryLimits() {
+    const exceeded = [];
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    // Получаем расходы за текущий месяц
+    const monthExpenses = state.transactions.filter(t => {
+        const date = new Date(t.timestamp);
+        return t.type === 'expense' && 
+               date.getMonth() === currentMonth && 
+               date.getFullYear() === currentYear;
+    });
+    
+    // Группируем по категориям
+    const categoryTotals = {};
+    monthExpenses.forEach(t => {
+        const cat = t.category || 'other';
+        const txRate = rates[t.currency] || 1;
+        const rate = rates[state.user.currency] || 1;
+        const convertedAmount = (t.amount * txRate) / rate;
+        
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + convertedAmount;
+    });
+    
+    // Проверяем лимиты
+    Object.entries(state.categoryLimits || {}).forEach(([category, limit]) => {
+        const spent = categoryTotals[category] || 0;
+        if (spent > limit) {
+            const overPercent = Math.round(((spent - limit) / limit) * 100);
+            const categoryName = state.categories[category]?.[state.user.language] || category;
+            
+            exceeded.push({
+                category,
+                categoryName,
+                spent,
+                limit,
+                overPercent
+            });
+        }
+    });
+    
+    return exceeded;
+}
+
+function displaySmartNotifications(notifications) {
+    if (notifications.length === 0) return;
+    
+    // Показываем тосты для самых важных уведомлений
+    notifications.forEach(notif => {
+        // Не показываем слишком часто одни и те же уведомления
+        const lastShown = localStorage.getItem(`notif_${notif.title}`);
+        const now = Date.now();
+        
+        if (!lastShown || (now - parseInt(lastShown)) > 6 * 60 * 60 * 1000) { // 6 часов
+            showToast(`${notif.icon} ${notif.text}`, notif.type);
+            localStorage.setItem(`notif_${notif.title}`, now.toString());
+        }
+    });
+}
+
+// 🔥 ОБНОВИТЕ СУЩЕСТВУЮЩУЮ ФУНКЦИЮ checkNotifications()
+function checkNotifications() {
+    const container = document.getElementById('alerts-container');
+    if (!container) return;
+    
+    const alerts = [];
+    const rate = rates[state.user.currency] || 1;
+    const budget = state.user.monthlyIncome * rate;
+    const expenses = getFilteredTransactions('expense', 'month');
+    const totalExpense = expenses.reduce((sum, t) => {
+        const txRate = rates[t.currency] || 1;
+        return sum + ((t.amount * txRate) / rate);
+    }, 0);
+    
+    // Базовые уведомления о бюджете
+    if (totalExpense > budget * 0.9 && totalExpense < budget) {
+        alerts.push({
+            type: 'warning',
+            icon: '⚠️',
+            title: 'Приближение к лимиту',
+            text: `Вы потратили ${Math.round((totalExpense/budget)*100)}% от бюджета`
+        });
+    }
+    
+    if (totalExpense > budget) {
+        alerts.push({
+            type: 'danger',
+            icon: '🚨',
+            title: 'Превышен бюджет!',
+            text: `Перерасход: ${formatCurrency(totalExpense - budget)}`
+        });
+    }
+    
+    // Уведомления о долгах
+    if (state.loans.length > 0) {
+        const totalDebt = state.loans.reduce((sum, l) => {
+            const loanRate = rates[l.currency || state.user.currency] || 1;
+            return sum + ((l.amount * loanRate) / rate);
+        }, 0);
+        alerts.push({
+            type: 'info',
+            icon: '💳',
+            title: 'Активные долги',
+            text: `У вас ${state.loans.length} долгов на сумму ${formatCurrency(totalDebt)}`
+        });
+    }
+    
+    // 🔥 ДОБАВЛЯЕМ УМНЫЕ УВЕДОМЛЕНИЯ
+    const smartAlerts = checkCategoryLimits().slice(0, 2); // Максимум 2 уведомления о лимитах
+    
+    smartAlerts.forEach(limit => {
+        alerts.push({
+            type: 'danger',
+            icon: '📊',
+            title: `Лимит "${limit.categoryName}"`,
+            text: `Превышен на ${limit.overPercent}% (${formatCurrency(limit.spent)} / ${formatCurrency(limit.limit)})`
+        });
+    });
+    
+    container.innerHTML = alerts.map(a => `
+        <div class="alert ${a.type}">
+            <div class="alert-icon">${a.icon}</div>
+            <div class="alert-content">
+                <div class="alert-title">${a.title}</div>
+                <div class="alert-text">${a.text}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 🔥 ДОБАВЬТЕ В ФУНКЦИЮ initializeApp() (после loadData())
+function initializeApp() {
+    if (state.isFirstLaunch) {
+        showOnboarding();
+    } else {
+        checkSecurityOnLoad();
+    }
+    
+    const onboardingEl = document.getElementById('onboarding');
+    const appEl = document.getElementById('app');
+    
+    if (onboardingEl) {
+        onboardingEl.style.display = 'none';
+    }
+    
+    if (appEl) {
+        appEl.style.display = 'block';
+        appEl.style.opacity = '1';
+    }
+    
+    // 🔥 ИНИЦИАЛИЗИРУЕМ ЛИМИТЫ КАТЕГОРИЙ
+    initializeCategoryLimits();
+    
+    applyTheme();
+    updateUI();
+    renderAllScreens();
+    
+    // 🔥 ЗАПУСКАЕМ УМНЫЕ УВЕДОМЛЕНИЯ С ЗАДЕРЖКОЙ
+    setTimeout(() => {
+        checkSmartNotifications();
+    }, 3000); // Через 3 секунды после загрузки
+    
+    setTimeout(() => {
+        if (typeof Chart !== 'undefined') {
+            initializeCharts();
+        }
+        initializeVoiceRecognition();
+    }, 200);
 }
 
 // Mustafoshoh Programer // Export/Import Functions
@@ -7610,6 +8262,39 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// 🔥 АВТОМАТИЧЕСКАЯ ПРОВЕРКА УВЕДОМЛЕНИЙ КАЖДЫЕ 30 МИНУТ
+setInterval(() => {
+    if (!state.isFirstLaunch && document.getElementById('app').style.display !== 'none') {
+        checkSmartNotifications();
+    }
+}, 30 * 60 * 1000); // 30 минут
+
+// 🔥 ПРОВЕРКА ПРИ ВОЗВРАТЕ НА ГЛАВНЫЙ ЭКРАН
+function switchScreen(screenName) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
+    const screenEl = document.getElementById(`${screenName}-screen`);
+    if (screenEl) screenEl.classList.add('active');
+    
+    const navBtn = document.querySelector(`.nav-btn[data-screen="${screenName}"]`);
+    if (navBtn) navBtn.classList.add('active');
+    
+    state.currentScreen = screenName;
+    
+    if (screenName === 'home') {
+        renderHomeScreen();
+        // 🔥 ПРОВЕРЯЕМ УВЕДОМЛЕНИЯ ПРИ ПЕРЕХОДЕ НА ГЛАВНУЮ
+        setTimeout(() => {
+            checkSmartNotifications();
+        }, 1000);
+    }
+    if (screenName === 'analytics') {
+        setTimeout(() => renderAnalyticsScreen(), 100);
+    }
+    if (screenName === 'history') renderHistoryScreen();
+    if (screenName === 'settings') renderSettingsScreen();
+}
     </script>
 </body>
 </html>
