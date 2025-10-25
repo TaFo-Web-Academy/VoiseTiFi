@@ -6147,7 +6147,7 @@ function openAIChatModal() {
     
     // Показываем приветственное сообщение AI
     setTimeout(() => {
-        addAIMessage("Привет! Я ваш Будущий  финансовый AI-помощник. Могу помочь с анализом расходов, планированием бюджета, дать советы по экономии и ответить на любые финансовые вопросы. Что вас интересует?", 'assistant');
+        addAIMessage("Привет! Я VoiseTiFi AI. Могу помочь с анализом расходов, планированием бюджета, дать советы по экономии и ответить на любые финансовые вопросы. Что вас интересует?", 'assistant');
     }, 500);
 }
 
@@ -6156,31 +6156,27 @@ function openAIChatModal() {
 async function sendAIMessage() {
     const input = document.getElementById('ai-chat-input');
     const message = input.value.trim();
-    
     if (!message) return;
-    
+
     input.value = '';
     addAIMessage(message, 'user');
-    
+
     try {
         addAIMessage('🧠 Думаю...', 'assistant', true);
-        
-        const response = await financialAI.processFinancialQuery(message, 'chat');
-        
-        removeLoadingMessage();
-        addAIMessage(response.text, 'assistant', false, response.isFallback);
-        
-    } catch (error) {
-        removeLoadingMessage();
-        addAIMessage('❌ Ошибка соединения. Используем локальный AI...', 'assistant', false, true);
-        
-        // Показываем локальный ответ при ошибке
-        setTimeout(() => {
-            const fallbackResponse = financialAI.getFallbackAIResponse(message);
-            addAIMessage(fallbackResponse, 'assistant', false, true);
-        }, 1000);
+        const aiResponse = await financialAI.processFinancialQuery(message, 'chat');
+        removeLoadingMessage(); {
+    const loadingMsg = document.getElementById('ai-loading-message');
+    if (loadingMsg) {
+        loadingMsg.remove();
     }
 }
+        addAIMessage(aiResponse.text, 'assistant', false, aiResponse.isFallback);
+    } catch (error) {
+        removeLoadingMessage();
+        addAIMessage('❌ Ошибка ИИ', 'assistant', false, true);
+    }
+}
+
 // ➕ Добавить сообщение в чат
 // 🔧 ОБНОВЛЕННАЯ ФУНКЦИЯ addAIMessage
 function addAIMessage(text, sender, isTemp = false, isFallback = false) {
@@ -6189,7 +6185,7 @@ function addAIMessage(text, sender, isTemp = false, isFallback = false) {
     
     let fallbackIndicator = '';
     if (sender === 'assistant' && isFallback) {
-        fallbackIndicator = '<div class="ai-fallback-indicator">🔧 Локальный AI</div>';
+        fallbackIndicator = '<div class="ai-fallback-indicator">AI от Company TiFiX</div>';
     }
     
     messageDiv.className = `ai-message ${sender} ${isTemp ? 'temp-message' : ''}`;
@@ -6338,7 +6334,7 @@ function toggleAISetting(setting) {
 // 🧪 Тестирование AI соединения
 // Тест API ключа
 async function quickTest() {
-    const API_KEY = "AIzaSyAq3j_TovBNyp2trg3Qvs7jS3azfFUZ_L4";
+    const API_KEY = "AIzaSyAq3j_TovBNyp2trg3Qvs7jS3azfFUZ_L4"; // 🔑 ТЕСТОВЫЙ КЛЮЧ
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -6356,7 +6352,7 @@ class FinancialAIAssistant {
     constructor() {
         this.apiKey = "AIzaSyBk_A9ExB6I_r2PaeOm3qk8fylxE15NRC8"; // 🔑 НОВЫЙ КЛЮЧ
        // Вариант 3 (универсальный)
-this.baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+this.baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
         this.conversationHistory = [];
         this.cache = new Map();
         this.maxHistory = 10;
@@ -6501,6 +6497,8 @@ this.baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-p
         } catch (error) {
             console.error('❌ Gemini AI Error:', error);
             return this.getFallbackResponse(userMessage);
+            console.log('מסמכי запрос:', userMessage);
+console.log('Контекст пользователя:', this.getUserFinancialContext());
         }
     }
 
@@ -6541,6 +6539,7 @@ ${this.conversationHistory.slice(-3).map(msg =>
 4. Предлагай конкретные цифры и действия
 5. Если нужны расчеты - покажи математику
 6. Для голосовых команд - ответ должен быть озвучиваемым
+7.Отвечай на Русский, Английский или Таджикский в зависимости от языка пользователя
 
 ПРИМЕРЫ ХОРОШИХ ОТВЕТОВ:
 ${langConfig.examples}
@@ -6609,9 +6608,9 @@ getFallbackAIResponse(prompt) {
     const financialContext = this.getUserFinancialContext();
     
     // Анализ расходов
-    if (lowerPrompt.includes('сколько потратил') || lowerPrompt.includes('анализ') || lowerPrompt.includes('траты')) {
-        return `📊 На основе ваших данных: в этом месяце вы потратили ${financialContext.monthSpending.toFixed(2)}${financialContext.currencySymbol}. Основные категории: ${financialContext.topSpendingCategories.map(c => `${c.icon} ${c.name}`).join(', ')}.`;
-    }
+    if (lowerPrompt.includes('сколько осталось')) {
+    return `На вашем счету осталось ${financialContext.currentBalance.toFixed(2)}${financialContext.currencySymbol}`;
+}
     
     // Советы по экономии
     if (lowerPrompt.includes('совет') || lowerPrompt.includes('экономи') || lowerPrompt.includes('сэкономить')) {
@@ -6639,13 +6638,7 @@ getFallbackAIResponse(prompt) {
     return "🤖 Я финансовый помощник VoiseTiFi. Могу помочь с анализом ваших расходов, планированием бюджета, дать советы по экономии. Спросите меня о ваших финансах!";
 }
 
-    // 🔧 ДОБАВЬТЕ ЭТУ ФУНКЦИЮ ДЛЯ ТЕСТИРОВАНИЯ
-
-// Вызовите эту функцию в консоли браузера: testGeminiConnection()
-
-    // 🔄 Обработка ответа от ИИ
-    // 🔧 ОБНОВЛЕННЫЙ МЕТОД processAIResponse
-processAIResponse(aiResponse, originalQuery) {
+  processAIResponse(aiResponse, originalQuery) {
     // Если ответ пришел от резервной системы, помечаем это
     const isFallback = typeof aiResponse === 'string' && !aiResponse.includes('candidates');
     
@@ -6658,7 +6651,7 @@ processAIResponse(aiResponse, originalQuery) {
         shouldSpeak: true,
         showInUI: true,
         timestamp: Date.now(),
-        isFallback: isFallback // Добавляем флаг резервного ответа
+        isFallback: isFallback 
     };
 }
     // 🔍 Анализ типа ответа
@@ -6796,11 +6789,12 @@ const financialAI = new FinancialAIAssistant();
 // ==========================================
 // 🚀 ИНИЦИАЛИЗАЦИЯ
 // ==========================================
-
-function initializeVoiceRecognition() {
-    voiceManager = new VoiceManager();
-    console.log('✅ Голосовой менеджер инициализирован');
-}
+financialAI = new FinancialAIAssistant();
+console.log('AI ассистент инициализирован', financialAI);
+//function initializeVoiceRecognition() {
+//voiceManager = new VoiceManager();
+    //console.log('✅ Голосовой менеджер инициализирован');
+//}
 
 // ==========================================
 // 🎤 ОТКРЫТЬ ГОЛОСОВУЮ МОДАЛКУ
@@ -9207,6 +9201,16 @@ function switchScreen(screenName) {
     }
     if (screenName === 'history') renderHistoryScreen();
     if (screenName === 'settings') renderSettingsScreen();
+}
+async function testAI() {
+    try {
+        const response = await financialAI.processFinancialQuery('Сколько я потратил в этом месяце?', 'chat');
+        console.log('Тест AI:', response);
+        alert('AI ответил: ' + response.text);
+    } catch (error) {
+        console.error('Ошибка теста AI:', error);
+        alert('Ошибка теста AI');
+    }
 }
     </script>
 </body>
